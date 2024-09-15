@@ -36,7 +36,7 @@ class Database:
     # Create table
     async def create_table_users(self):
         sql = """
-        CREATE TABLE Users (
+        CREATE TABLE IF NOT EXISTS Users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             fullname varchar(255) ,
             telegram_id varchar(20) NOT NULL UNIQUE, 
@@ -61,7 +61,7 @@ class Database:
 
     def select_all_users(self):
         sql = """
-        SELECT * FROM Users
+        SELECT telegram_id FROM Users
         """
         return  self.execute(sql, fetchall=True)
 
@@ -113,3 +113,38 @@ class Database:
     async def get_film_by_id(self, film_id):
         sql = "SELECT * FROM Films WHERE id=?"
         return await self.execute(sql, parameters=(film_id,), fetchone=True)
+
+    # Create Channels Table
+    async def create_table_channels(self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS Channels (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            channel_username TEXT NOT NULL UNIQUE
+        );
+        """
+        await self.execute(sql, commit=True)
+
+    # Kanal qo'shish
+    async def add_channel(self, channel_username):
+        sql = """
+        INSERT INTO Channels (channel_username) 
+        VALUES (?)
+        """
+        print(f"Kanal qo'shilmoqda: {channel_username}")
+
+        try:
+            await self.execute(sql, parameters=(channel_username,), commit=True)
+        except sqlite3.IntegrityError:
+            print(f"Channel {channel_username} already exists")
+
+    # Kanallarni olish
+    async def get_all_channels(self):
+        sql = "SELECT channel_username FROM Channels"
+        channels = await self.execute(sql, fetchall=True)
+        print(f"Kanallar: {channels}")  # Kanallarni chop etish
+        return channels
+
+    # Kanalni o'chirish
+    async def delete_channel(self, channel_username):
+        sql = "DELETE FROM Channels WHERE channel_username = ?"
+        await self.execute(sql, parameters=(channel_username,), commit=True)

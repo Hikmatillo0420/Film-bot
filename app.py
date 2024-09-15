@@ -18,6 +18,7 @@ async def main():
         # Create Users Table
         try:
             await db.create_table_users()
+            await db.create_table_channels()
         except Exception as e:
             print(e)
         try:

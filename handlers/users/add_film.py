@@ -1,7 +1,9 @@
-from aiogram.types import CallbackQuery, InputFile
+from aiogram.types import CallbackQuery, InputFile, InlineKeyboardMarkup, InlineKeyboardButton
+
+from data.config import ADMINS
 from keyboards.default.buttons import admin_button
 from keyboards.inline.buttons import yes_no_button
-from loader import dp, bot, db
+from loader import dp, bot, db, is_user_subscribed
 from aiogram import types, F
 from aiogram.fsm.context import FSMContext
 from states.film_add_states import FilmAddStates
@@ -96,17 +98,27 @@ async def get_check_0(call: CallbackQuery, state: FSMContext):
 async def echo_message(message: types.Message):
     await message.answer(f"{message.text} - id bilan hech qanday kino topilmadi ❌")
 
-
 @dp.message(F.text)
 async def return_film_by_id(message: types.Message):
+    user_id = message.from_user.id
+
+    if str(user_id) not in ADMINS:
+        if not await is_user_subscribed(user_id):
+            channels = await db.get_all_channels()
+            keyboard = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text=f" {channel[0]}", url=f"https://t.me/{channel[0][1:]}")]
+                    for channel in channels
+                ]
+            )
+            await message.answer("Botdan foydalanish uchun quyidagi kanallarga obuna bo‘ling va qayta urinib ko‘ring:", reply_markup=keyboard)
+            return
     try:
-        film_id = int(message.text.strip())  # Foydalanuvchi kiritgan ID ni integer turiga o'zgartirish
+        film_id = int(message.text.strip())
     except ValueError:
         await message.answer("Iltimos, to'g'ri ID raqamini kiriting.")
         return
-
     row = await db.get_film_by_id(film_id)
-
     if row:
         text = (
             f"⌨️ ID: #{row[0]}\n\n"  # row[0] - ID 

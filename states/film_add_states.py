@@ -8,3 +8,6 @@ class FilmAddStates(StatesGroup):
     resource = State()
     chekk = State()
     film = State()
+    kanal = State()
+    delete_kanal = State()
+    content = State()

@@ -13,6 +13,7 @@ async def is_user_subscribed(user_id: int) -> bool:
     if not channels:
         print("Hech qanday kanal mavjud emas.")
         return True
+    # gg
 
     for channel in channels:
         try:

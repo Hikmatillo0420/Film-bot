@@ -1,10 +1,13 @@
+import asyncio
+
+from aiogram.fsm.context import FSMContext
+
 from loader import dp, db
 from aiogram import types, F
 from aiogram.filters import Command
 from filters.admin_bot import IsBotAdmin
 from keyboards.default.buttons import *
-from aiogram.fsm.context import FSMContext
-from states.film_add_states import FilmAddStates  # FSM state for reklama
+from states.film_add_states import FilmAddStates
 
 
 @dp.message(Command('admin'), IsBotAdmin())
@@ -25,7 +28,25 @@ async def force_channel(message: types.Message):
 
 
 #
-# @dp.message(F.text == "📤 Reklama yuborish", IsBotAdmin())
-# async def reklama_start(message: types.Message, state: FSMContext):
-#     await message.answer("Reklama yuborish uchun rasm, video yoki matn yuboring.")
-#     await state.set_state(FilmAddStates.content)
+@dp.message(F.text == "📤 Reklama yuborish", IsBotAdmin())
+async def reklama_start(message: types.Message, state: FSMContext):
+    await message.answer("Reklama yuborish uchun rasm, video yoki matn yuboring.")
+    await state.set_state(FilmAddStates.ask_ad_content)
+
+
+@dp.message(FilmAddStates.ask_ad_content)
+async def send_ad_to_users(message: types.Message, state: FSMContext):
+    users = await db.select_all_users()
+    count = 0
+    for user in users:
+        user_id = user[-1]
+        print("bular", user_id)
+        try:
+            await message.send_copy( chat_id=user_id)
+            count += 1
+            await asyncio.sleep(0.05)
+        except Exception as error:
+            # logging.info(f"Ad did not send to user: {user_id}. Error: {error}")
+            print(error)
+    await message.answer(text=f"Reklama {count} ta foydalauvchiga muvaffaqiyatli yuborildi.")
+    await state.clear()

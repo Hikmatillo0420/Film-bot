@@ -1,5 +1,6 @@
 import sqlite3
 
+
 class Database:
     def __init__(self, path_to_db="filmbot.db"):
         self.path_to_db = path_to_db
@@ -32,7 +33,6 @@ class Database:
 
         return data
 
-
     # Create table
     async def create_table_users(self):
         sql = """
@@ -63,7 +63,7 @@ class Database:
         sql = """
         SELECT telegram_id FROM Users
         """
-        return  self.execute(sql, fetchall=True)
+        return self.execute(sql, fetchall=True)
 
     def select_user(self, **kwargs):
         # SQL_EXAMPLE = "SELECT * FROM Users where id=1 AND Name='John'"

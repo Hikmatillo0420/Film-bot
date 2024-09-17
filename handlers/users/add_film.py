@@ -98,36 +98,49 @@ async def get_check_0(call: CallbackQuery, state: FSMContext):
 async def echo_message(message: types.Message):
     await message.answer(f"{message.text} - id bilan hech qanday kino topilmadi ❌")
 
+
 @dp.message(F.text)
 async def return_film_by_id(message: types.Message):
     user_id = message.from_user.id
-
-    if str(user_id) not in ADMINS:
-        if not await is_user_subscribed(user_id):
-            channels = await db.get_all_channels()
-            keyboard = InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [InlineKeyboardButton(text=f" {channel[0]}", url=f"https://t.me/{channel[0][1:]}")]
-                    for channel in channels
-                ]
-            )
-            await message.answer("Botdan foydalanish uchun quyidagi kanallarga obuna bo‘ling va qayta urinib ko‘ring:", reply_markup=keyboard)
-            return
     try:
-        film_id = int(message.text.strip())
-    except ValueError:
-        await message.answer("Iltimos, to'g'ri ID raqamini kiriting.")
-        return
-    row = await db.get_film_by_id(film_id)
-    if row:
-        text = (
-            f"⌨️ ID: #{row[0]}\n\n"  # row[0] - ID 
-            f"🎥 Kinoni nomi : {row[1]}\n\n"  # row[1] - name 
-            f"⚙️ Sifati: {row[2]}\n\n"
-            f"📃 Tili: {row[3]}\n\n"
-            f"📁 Manba: {row[4]}\n\n"
-            f"📍 Bizning bot: @MeshpolvonFilm_bot"
-        )
-        await message.answer_video(row[5], caption=text, parse_mode="HTML")  # row[5] - file_id
+        await db.add_user(fullname=message.from_user.full_name, telegram_id=message.from_user.id)
+    except:
+        pass
+    if await is_user_subscribed(user_id):
+        await message.answer(f"Botdan foydalanishingiz mumkin😊")
+
+        try:
+            film_id = int(message.text.strip())
+        except ValueError:
+            await message.answer("Iltimos, to'g'ri ID raqamini kiriting.")
+            return
+        row = await db.get_film_by_id(film_id)
+        if row:
+            text = (
+                f"⌨️ ID: #{row[0]}\n\n"  # row[0] - ID 
+                f"🎥 Kinoni nomi : {row[1]}\n\n"  # row[1] - name 
+                f"⚙️ Sifati: {row[2]}\n\n"
+                f"📃 Tili: {row[3]}\n\n"
+                f"📁 Manba: {row[4]}\n\n"
+                f"📍 Bizning bot: @MeshpolvonFilm_bot"
+            )
+            await message.answer_video(row[5], caption=text, parse_mode="HTML")  # row[5] - file_id
+
+        else:
+            await echo_message(message)
     else:
-        await echo_message(message)
+        channels = await db.get_all_channels()
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text=f"{channel[0]}", url=f"https://t.me/{channel[0][1:]}")]
+                for channel in channels
+            ],
+        )
+        keyboard.inline_keyboard.append(
+            [InlineKeyboardButton(text="✅ Tekshirish", callback_data="check_subscription")],
+
+        )
+        await message.answer(
+            "Botdan foydalanish uchun quyidagi kanallarga obuna bo‘ling !!!",
+            reply_markup=keyboard,
+        )

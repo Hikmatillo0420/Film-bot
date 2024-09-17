@@ -11,3 +11,4 @@ class FilmAddStates(StatesGroup):
     kanal = State()
     delete_kanal = State()
     content = State()
+    ask_ad_content = State()

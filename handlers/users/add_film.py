@@ -18,7 +18,7 @@ async def film_name_add(message: types.Message, state: FSMContext):
 @dp.message(F.text, FilmAddStates.name)
 async def film_quality_add(message: types.Message, state: FSMContext):
     await message.answer("⚙️Kino sifati : ")
-    await state.set_state(FilmAddStates.film)
+    await state.set_state(FilmAddStates.quality)
     name = message.text
     await state.update_data({
         'name': name

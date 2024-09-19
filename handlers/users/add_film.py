@@ -9,7 +9,7 @@ from aiogram.fsm.context import FSMContext
 from states.film_add_states import FilmAddStates
 
 
-@dp.message(F.text == "Kino joylash")
+@dp.message(F.text == "📀 Kino joylash")
 async def film_name_add(message: types.Message, state: FSMContext):
     await message.answer("🎥Kino nomi : ")
     await state.set_state(FilmAddStates.name)
@@ -18,7 +18,7 @@ async def film_name_add(message: types.Message, state: FSMContext):
 @dp.message(F.text, FilmAddStates.name)
 async def film_quality_add(message: types.Message, state: FSMContext):
     await message.answer("⚙️Kino sifati : ")
-    await state.set_state(FilmAddStates.quality)
+    await state.set_state(FilmAddStates.film)
     name = message.text
     await state.update_data({
         'name': name

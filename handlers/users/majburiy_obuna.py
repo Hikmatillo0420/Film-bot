@@ -68,8 +68,10 @@ async def process_channel_deletion(callback_query: CallbackQuery):
 async def list_channels(message: types.Message):
     channels = db.get_all_url()
     if channels:
-        # Har bir kanal username'ini '@' bilan birlashtirish
-        channels_text = "\n\n".join([f"@{channel}" for channel in channels])
+        # URLni tekshirish va formatlash
+        channels_text = "\n\n".join(
+            [f"{channel}" if channel.startswith("https://t.me/") else f"https://t.me/{channel}" for channel in channels]
+        )
         await message.answer(f"Majburiy kanallar:\n\n{channels_text}")
     else:
         await message.answer("Majburiy kanallar qo'shilmagan.")

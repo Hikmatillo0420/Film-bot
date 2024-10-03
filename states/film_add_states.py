@@ -6,6 +6,7 @@ class FilmAddStates(StatesGroup):
     kod_2 = State()
     chekk = State()
     film_id = State()
+    film_name = State()
     content = State()
     ask_ad_content = State()
     file_name = State()

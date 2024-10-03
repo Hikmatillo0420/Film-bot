@@ -199,6 +199,12 @@ class Database:
         """
         return self.execute(sql, parameters=(data_id,), fetchone=True)
 
+    def get_film_by_name(self, kod: int):
+        sql = """
+        SELECT file_name FROM data WHERE kod = %s
+        """
+        return self.execute(sql, parameters=(kod,), fetchone=True)
+
     def get_user(self, user_id: int):
         sql = """
         SELECT * FROM users WHERE user_id = %s

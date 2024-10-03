@@ -14,13 +14,17 @@ async def return_film_by_id(message: types.Message):
     except ValueError:
         await message.answer("Iltimos, to'g'ri ID raqamini kiriting.")
         return
+
     row = db.get_film_by_id(film_id)
+
     if row:
+        name_film = db.get_film_by_name(film_id)  # Pass film_id to get_film_by_name
         text = (
-            f"⌨️ KOD: #{row['kod']}\n\n"  # row[0] - ID
+            f"⌨️ KOD: #{row['kod']}\n"
+            f"📑 Name: {name_film['file_name']}\n\n"  # Use the correct field name here
             f" 📍Bizning bot: @kmfilmlar_bot"
-            # f"🎥 Kino yili : {row['all']}\n\n"  # row[1] - name
         )
-        await message.answer_video(row['file_id'], caption=text, parse_mode="HTML")  # row[5] - file_id
+        await message.answer_video(row['file_id'], caption=text, parse_mode="HTML")  # row['file_id'] is correct
     else:
         await echo_message(message)
+

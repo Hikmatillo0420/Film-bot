@@ -1,11 +1,15 @@
+from mailbox import Message
+
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery
 
 from filters import IsBotAdmin
+from keyboards.inline.buttons import delete_channel_button
 from loader import dp, db
 from aiogram import types, F
 
-from states.film_add_states import FilmAddStates
 from keyboards.default.buttons import admin_button
+from states.film_add_states import FilmAddStates
 
 
 @dp.message(F.text == "🔙 Orqaga", IsBotAdmin())
@@ -16,55 +20,56 @@ async def orqaga(message: types.Message, state: FSMContext):
 
 @dp.message(F.text == "➕ Kanal qo'shish", IsBotAdmin())
 async def add_channel(message: types.Message, state: FSMContext):
-    await message.answer("Telegram kanal username'ini kiriting !!!\n\nMisol uchun: @kanal ")
-    await state.set_state(FilmAddStates.kanal)
+    await message.answer("Majburiy obunaga qo'shmoqchi bo'lgan telegram kanaldan biron habarni uzating !")
+    # await state.set_state(FilmAddStates.chat_id)
 
 
-@dp.message(F.text, FilmAddStates.kanal)
-async def film_quality_add(message: types.Message, state: FSMContext):
-    kanal = message.text
+@dp.message(F.forward_from_chat)
+async def process_forwarded_message(message: Message, state: FSMContext):
+    if message.forward_from_chat.type == "channel":
+        channel_id = message.forward_from_chat.id
+        channel_username = message.forward_from_chat.username
+        if not channel_username:
+            await message.answer("Bu yopiq kanal. Iltimos, kanal havolasini yuboring !")
+            await state.update_data(channel_id=channel_id)
+            await state.set_state(FilmAddStates.waiting_for_channel_link)
+        else:
+            db.add_kanal(channel_id, channel_username)
+            await message.answer(f"Kanal qo'shildi!\nKanal ID: {channel_id}\nUsername: @{channel_username}")
+    else:
+        await message.answer("Iltimos, kanaldan xabar forward qiling.")
 
-    if not kanal.startswith('@') or ' ' in kanal:
-        await message.answer("Iltimos, to'g'ri formatda kanal username'ini kiriting! Misol uchun: @kanal")
-        return
 
-    await state.update_data({
-        'kanal': kanal
-    })
+@dp.message(FilmAddStates.waiting_for_channel_link)
+async def process_channel_link(message: Message, state: FSMContext):
+    channel_link = message.text
     data = await state.get_data()
-    await db.add_channel(data['kanal'])
-    await message.answer(f"Yangi kanal qo‘shildi: {kanal}")
+    channel_id = data.get("channel_id")
+    db.add_kanal(channel_id, channel_link)
+    await message.answer(f"Kanal qo'shildi!\nKanal ID: {channel_id}\nLink: {channel_link}")
     await state.clear()
 
 
 @dp.message(F.text == "➖ Kanal o'chrish", IsBotAdmin())
 async def delete_channel(message: types.Message, state: FSMContext):
-    await message.answer("Iltimos, o'chirish uchun kanal username'ini kiriting !!!\n\nMisol uchun: @kanal")
-    await state.set_state(FilmAddStates.delete_kanal)
+    await message.answer("O‘chirmoqchi bo‘lgan kanalingizni ustiga bosing!", reply_markup=await delete_channel_button())
 
 
-@dp.message(F.text, FilmAddStates.delete_kanal)
-async def delete_kanal(message: types.Message, state: FSMContext):
-    kanal_delete = message.text
+@dp.callback_query(lambda c: c.data.startswith('delete_channel_'))
+async def process_channel_deletion(callback_query: CallbackQuery):
+    chanal_id = callback_query.data.split('_')[2]
+    db.delete_kanal(chanal_id)
 
-    if not kanal_delete.startswith('@') or ' ' in kanal_delete:
-        await message.answer("Iltimos, to'g'ri formatda kanal username'ini kiriting! Misol uchun: @kanal")
-        return
-
-    await state.update_data({
-        'kanal_delete': kanal_delete
-    })
-    data = await state.get_data()
-    await db.delete_channel(data['kanal_delete'])
-    await message.answer(f"Kanal o‘chirildi: {kanal_delete}")
-    await state.clear()
+    await callback_query.answer("Kanal muvaffaqiyatli o'chirildi!")
+    await callback_query.message.edit_text("Tanlangan kanal muvaffaqiyatli o‘chirildi.")
 
 
 @dp.message(F.text == "👁‍🗨 Majburiy kanallarni ko'rish", IsBotAdmin())
 async def list_channels(message: types.Message):
-    channels = await db.get_all_channels()
+    channels = db.get_all_url()
     if channels:
-        channels_text = "\n".join([f"{channel[0]}" for channel in channels])
+        # Har bir kanal username'ini '@' bilan birlashtirish
+        channels_text = "\n\n".join([f"@{channel}" for channel in channels])
         await message.answer(f"Majburiy kanallar:\n\n{channels_text}")
     else:
         await message.answer("Majburiy kanallar qo'shilmagan.")

@@ -13,15 +13,43 @@ async def yes_no_button():
     return button
 
 
-async def subscription_button():
-    channels = await db.get_all_channels()
-    keyboard = InlineKeyboardMarkup(
+async def yes_no_button_2():
+    button = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text=f"{channel[0]}", url=f"https://t.me/{channel[0][1:]}")]
-            for channel in channels
-        ]
+            [InlineKeyboardButton(text="Ha", callback_data="yeah"),
+             InlineKeyboardButton(text="Yo'q", callback_data="noo")]]
+
     )
-    keyboard.inline_keyboard.append(
-        [InlineKeyboardButton(text="✅ Tekshirish", callback_data="check_subscription")]
-    )
-    return keyboard
+    return button
+
+
+async def subscription_button():
+    channels = db.get_all_channels()  # channels: [{'chat_id': '-1001562032753', 'url': 'https://t.me/...'}, ...]
+    inline_keyboard = []
+
+    for sanoq, channel in enumerate(channels, start=1):
+        button = InlineKeyboardButton(text=f"{sanoq} - kanal", url=channel['url'])
+        inline_keyboard.append([button])
+
+    inline_keyboard.append([
+        InlineKeyboardButton(text="Obuna bo'ldim✅", callback_data="subscribe_true")  # callback_data qisqa va aniq
+    ])
+
+    return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
+
+async def delete_channel_button():
+    kanallar = db.get_all_channels()
+    inline_keyboard = []
+
+    for kanal in kanallar:
+        tugma = InlineKeyboardButton(
+            text=f"{kanal['url']}",
+            callback_data=f"delete_channel_{kanal['chat_id']}"
+        )
+        inline_keyboard.append([tugma])
+
+
+
+    return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
+
+

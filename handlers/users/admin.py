@@ -17,9 +17,9 @@ async def start_admin_bot(message: types.Message):
 
 @dp.message(F.text == "🛎 Obunachilar soni", IsBotAdmin())
 async def member(message: types.Message):
-    count_result = await db.count_users()
-    count = count_result[0]
-    await message.answer(f"Foydalanuvchilar soni: {count}")
+    count_result = db.count_users()
+    count = count_result['total']
+    await message.answer(f"👥  Foydalanuvchilar soni: {count}")
 
 
 @dp.message(F.text == "📌Majburiy Obuna", IsBotAdmin())
@@ -36,17 +36,16 @@ async def reklama_start(message: types.Message, state: FSMContext):
 
 @dp.message(FilmAddStates.ask_ad_content)
 async def send_ad_to_users(message: types.Message, state: FSMContext):
-    users = await db.select_all_users()
+    await state.clear()
+    users = db.select_all_users()
     count = 0
     for user in users:
-        user_id = user[-1]
+        user_id = user['user_id']
         print("bular", user_id)
         try:
-            await message.send_copy( chat_id=user_id)
+            await message.send_copy(chat_id=user_id)
             count += 1
             await asyncio.sleep(0.05)
         except Exception as error:
-            # logging.info(f"Ad did not send to user: {user_id}. Error: {error}")
             print(error)
     await message.answer(text=f"Reklama {count} ta foydalauvchiga muvaffaqiyatli yuborildi.")
-    await state.clear()

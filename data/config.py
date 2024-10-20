@@ -8,6 +8,5 @@ password = env.str('password')
 database = env.str('database')
 
 BOT_TOKEN = env.str('BOT_TOKEN')
-ADMINS = env.list('ADMINS')
-
+# ADMINS = env.list('ADMINS')
 

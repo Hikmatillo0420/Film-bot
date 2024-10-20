@@ -2,14 +2,19 @@ from datetime import datetime
 
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import CommandStart
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from keyboards.inline.buttons import subscription_button
 from loader import dp, db, bot
 from aiogram import types
 
+from utils.utils import is_admin
+
 
 async def is_user_subscribed(user_id: int) -> bool:
+    if await is_admin(user_id):
+        return True  # Agar foydalanuvchi admin bo'lsa, True qaytaradi
+
     channels = db.get_all_channels()
     if not channels:
         return True
@@ -44,6 +49,7 @@ async def start_bot(message: types.Message):
             print(f"Foydalanuvchi allaqachon mavjud: {user}")
     except Exception as e:
         print(f"Foydalanuvchini qo'shishda xatolik: {e}")
+
     if await is_user_subscribed(user_id):
         msg = """👋 Salom 
 

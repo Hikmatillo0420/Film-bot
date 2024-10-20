@@ -19,22 +19,36 @@ async def main():
         dp.update.outer_middleware(UserCheckMiddleware())
         # Create Users Table
         try:
-            await db.create_table_users()
+            db.create_table_admins()
+        except Exception as e:
+            print(e)
+        try:
+            db.create_table_users()
         except Exception as e:
             print(e)
 
         try:
-            await db.create_table_kanal()
+            db.create_table_kanal()
         except Exception as e:
             print(e)
 
         try:
-            await db.create_table_data()
+            db.create_table_data()
         except Exception as e:
             print(e)
 
         try:
-            await db.create_table_admins()
+            db.create_table_admins()
+        except Exception as e:
+            print(e)
+
+        try:
+            db.create_table_serials()
+        except Exception as e:
+            print(e)
+
+        try:
+            db.create_table_serial_parts()
         except Exception as e:
             print(e)
 

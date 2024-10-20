@@ -21,10 +21,10 @@ async def orqaga(message: types.Message, state: FSMContext):
 @dp.message(F.text == "➕ Kanal qo'shish", IsBotAdmin())
 async def add_channel(message: types.Message, state: FSMContext):
     await message.answer("Majburiy obunaga qo'shmoqchi bo'lgan telegram kanaldan biron habarni uzating !")
-    # await state.set_state(FilmAddStates.chat_id)
+    await state.set_state(FilmAddStates.chat_id)
 
 
-@dp.message(F.forward_from_chat)
+@dp.message(FilmAddStates.chat_id, F.forward_from_chat)
 async def process_forwarded_message(message: Message, state: FSMContext):
     if message.forward_from_chat.type == "channel":
         channel_id = message.forward_from_chat.id
@@ -75,3 +75,5 @@ async def list_channels(message: types.Message):
         await message.answer(f"Majburiy kanallar:\n\n{channels_text}")
     else:
         await message.answer("Majburiy kanallar qo'shilmagan.")
+
+

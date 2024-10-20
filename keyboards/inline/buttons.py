@@ -53,3 +53,16 @@ async def delete_channel_button():
     return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
 
 
+async def delete_admin_button():
+    adminlar = db.get_all_admins()  # Barcha adminlarni olish
+    inline_keyboard = []
+
+    for admin in adminlar:
+        tugma = InlineKeyboardButton(
+            text=f"{admin['user_name']}",  # Adminning user_name'ini ko'rsatish
+            callback_data=f"delete_admin_{admin['user_id']}"  # Callback uchun user_id ni ishlatish
+        )
+        inline_keyboard.append([tugma])
+
+    return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
+

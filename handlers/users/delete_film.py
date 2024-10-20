@@ -8,7 +8,7 @@ from loader import dp, db
 from states.film_add_states import FilmAddStates
 
 
-@dp.message(F.text == "🔝 Asosiy admin panel", IsBotAdmin())
+@dp.message(F.text == "🔝 Asosiy admin panelga qaytish", IsBotAdmin())
 async def orqaga(message: types.Message, state: FSMContext):
     await state.clear()
     await message.answer("🔝 Asosiy Menyu", reply_markup=admin_button())

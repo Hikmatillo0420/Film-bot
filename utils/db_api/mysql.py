@@ -38,10 +38,12 @@ class Database:
 
     def create_table_admins(self):
         sql = """
-        CREATE TABLE IF NOT EXISTS admins (
+            CREATE TABLE IF NOT EXISTS admins (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            user_id VARCHAR(64) NOT NULL
-        ) CHARSET = utf8mb3;
+            user_id VARCHAR(64) NOT NULL,
+            user_name VARCHAR(100) NOT NULL
+        ) CHARSET = utf8mb4;
+
         """
         self.execute(sql, commit=True)
 
@@ -115,11 +117,11 @@ class Database:
         """
         self.execute(sql, commit=True)
 
-    def add_admin(self, user_id: str):
+    def add_admin(self, user_id: str, user_name: str):
         sql = """
-        INSERT INTO admins(user_id) VALUES (%s)
+        INSERT INTO admins(user_id, user_name) VALUES (%s, %s)
         """
-        self.execute(sql, parameters=(user_id,), commit=True)
+        self.execute(sql, parameters=(user_id, user_name), commit=True)
 
     def add_channel(self, chat_id: int):
         sql = """
@@ -171,6 +173,7 @@ class Database:
         """
         self.execute(sql, parameters=(user_id, ban, sana, status), commit=True)
 
+
     def select_all_users(self):
         sql = """
         SELECT * FROM users
@@ -183,6 +186,12 @@ class Database:
         """
         return self.execute(sql, fetchall=True)
 
+    def get_all_admins(self):
+        sql = """
+        SELECT id,user_id, user_name FROM admins
+        """
+        return self.execute(sql, fetchall=True)
+
     def count_users(self):
         return self.execute("SELECT COUNT(user_id) as total FROM users;", fetchone=True)
 
@@ -192,6 +201,10 @@ class Database:
         DELETE FROM users WHERE TRUE
         """
         self.execute(sql, commit=True)
+
+    def get_admin(self, user_id: int):
+        sql = "SELECT * FROM admins WHERE user_id = %s"
+        return self.execute(sql, parameters=(user_id,), fetchone=True)
 
     def get_film_by_id(self, data_id: int):
         sql = """
@@ -235,6 +248,11 @@ class Database:
         DELETE FROM data WHERE kod = %s"""
         return self.execute(sql, parameters=(kod,), commit=True)
 
+    def delete_admin_id(self, user_id):
+        sql = """
+        DELETE FROM admins WHERE user_id = %s"""
+        return self.execute(sql, parameters=(user_id,), commit=True)
+
 
 def logger(statement):
     print(f"""
@@ -243,3 +261,6 @@ Executing:
 {statement}
 _____________________________________________________
 """)
+
+
+

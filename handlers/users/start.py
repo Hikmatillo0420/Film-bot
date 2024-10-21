@@ -55,7 +55,7 @@ async def start_bot(message: types.Message):
 
 Marhamat, kerakli kodni yuboring:"""
         chanel = InlineKeyboardMarkup(inline_keyboard=[[
-            InlineKeyboardButton(text="🔎 Kodlarni qidirish", url="https://t.me/MORFIN_13_KINOLAR_RAMANTIK")]])
+            InlineKeyboardButton(text="🔎 Kodlarni qidirish", url="https://t.me/MeshpolvonFilm")]])
         await message.reply(msg, reply_markup=chanel)
     else:
         await message.answer(
@@ -72,7 +72,7 @@ async def oldim(call: types.CallbackQuery):
 
         Marhamat, kerakli kodni yuboring:"""
         chanel = InlineKeyboardMarkup(inline_keyboard=[[
-            InlineKeyboardButton(text="🔎 Kodlarni qidirish", url="https://t.me/MORFIN_13_KINOLAR_RAMANTIK")]])
+            InlineKeyboardButton(text="🔎 Kodlarni qidirish", url="https://t.me/MeshpolvonFilm")]])
         await call.message.answer(msg, reply_markup=chanel)
     else:
         await call.message.answer("Iltimios! ⚠️ Botdan foydalanish uchun, quyidagi kanallarga obuna bo'ling:",

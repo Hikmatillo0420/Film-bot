@@ -117,6 +117,62 @@ class Database:
         """
         self.execute(sql, commit=True)
 
+    def create_table_serials(self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS serials (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            serial_name VARCHAR(255) NOT NULL,
+            serial_title VARCHAR(255),
+            serial_banner VARCHAR(255) NOT NULL
+        ) CHARSET = utf8mb3;
+        """
+        self.execute(sql, commit=True)
+
+    def create_table_episodes(self):
+        sql = """
+            CREATE TABLE IF NOT EXISTS episodes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                serial_id INT NOT NULL,
+                episode_number INT NOT NULL,
+                video_id VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (serial_id) REFERENCES serials(id) ON DELETE CASCADE
+            ) CHARSET=utf8mb3 ENGINE=InnoDB;
+        """
+        self.execute(sql, commit=True)
+
+    def add_serial(self, serial_name: str, serial_title: str, serial_banner: str):
+        sql = """
+            INSERT INTO serials(serial_name, serial_title, serial_banner) VALUES (%s, %s, %s)
+        """
+        self.execute(sql, parameters=(serial_name, serial_title, serial_banner), commit=True)
+
+    def get_serial_id(self, serial_name: str):
+        sql = "SELECT id FROM serials WHERE serial_name = %s"
+        result = self.execute(sql, parameters=(serial_name,), fetchone=True)
+        return result['id'] if result else None
+
+    def add_episode(self, serial_id: int, episode_number: int, video_id: str):
+        sql = """
+            INSERT INTO episodes(serial_id, episode_number, video_id) VALUES (%s, %s, %s)
+        """
+        self.execute(sql, parameters=(serial_id, episode_number, video_id), commit=True)
+
+    def check_code_exists_serial(self, serial_name: str):
+        query = "SELECT EXISTS(SELECT 1 FROM serials WHERE serial_name = %s)"
+        result = self.execute(query, parameters=(serial_name,), fetchone=True)
+        return list(result.values())[0] if result else False
+
+    def get_serial_by_name(self, serial_name: str):
+        sql = "SELECT * FROM serials WHERE serial_name = %s"
+        result = self.execute(sql, parameters=(serial_name,), fetchone=True)
+        return result
+
+    def get_episodes_by_serial_id(self, serial_id: int):
+        sql = "SELECT * FROM episodes WHERE serial_id = %s ORDER BY episode_number"
+        result = self.execute(sql, parameters=(serial_id,), fetchall=True)
+        return result
+
     def add_admin(self, user_id: str, user_name: str):
         sql = """
         INSERT INTO admins(user_id, user_name) VALUES (%s, %s)
@@ -242,6 +298,7 @@ class Database:
 
         # Natija faqat bitta qiymatni qaytaradi ('EXISTS' natijasi), shuning uchun biz faqat birinchi qiymatni olamiz
         return list(result.values())[0]
+
 
     def delete_film_id(self, kod):
         sql = """

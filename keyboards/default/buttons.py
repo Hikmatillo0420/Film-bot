@@ -41,7 +41,7 @@ def film_delete_or_join():
 def serial_delete_or_join():
     button = ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="➕ Serial qo'shish"), KeyboardButton(text="➖ Serial o'chrish")],
+            [KeyboardButton(text="➕ Serial joylash"), KeyboardButton(text="➖ Serial o'chrish")],
             [KeyboardButton(text="🔝 Asosiy admin panelga qaytish")]
         ],
         resize_keyboard=True,

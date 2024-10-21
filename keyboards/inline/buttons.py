@@ -66,3 +66,41 @@ async def delete_admin_button():
 
     return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
 
+
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
+def generate_episode_buttons(episodes, page=1, per_page=100):
+    buttons = []
+    start_index = (page - 1) * per_page
+    end_index = start_index + per_page
+
+    # Epizodlarni tugmalarga ajratamiz
+    row = []
+    for ep in episodes[start_index:end_index]:
+        button = InlineKeyboardButton(
+            text=f"{ep['episode_number']}",
+            callback_data=f"view_episode_{ep['episode_number']}"
+        )
+        row.append(button)
+
+        # Har ikki qismdan keyin qatorni to'ldiramiz
+        if len(row) == 100:
+            buttons.append(row)
+            row = []
+
+    # Agar qoldiq tugma bo'lsa (qator to'liq bo'lmasa)
+    if row:
+        buttons.append(row)
+
+    # Sahifalash uchun "Oldingi" va "Keyingi" tugmalari
+    pagination_row = []
+    if page > 1:
+        pagination_row.append(InlineKeyboardButton(text="⬅️ Oldingi", callback_data=f"pagination_{page - 1}"))
+    if end_index < len(episodes):
+        pagination_row.append(InlineKeyboardButton(text="Keyingi ➡️", callback_data=f"pagination_{page + 1}"))
+
+    if pagination_row:
+        buttons.append(pagination_row)
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+

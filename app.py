@@ -48,9 +48,10 @@ async def main():
             print(e)
 
         try:
-            db.create_table_serial_parts()
+            db.create_table_episodes()
         except Exception as e:
             print(e)
+
 
         await dp.start_polling(bot)
     finally:

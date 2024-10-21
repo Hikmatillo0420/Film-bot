@@ -64,6 +64,7 @@ Marhamat, kerakli kodni yuboring:"""
         )
 
 
+
 @dp.callback_query(lambda c: c.data == "subscribe_true")
 async def oldim(call: types.CallbackQuery):
     await call.message.delete()

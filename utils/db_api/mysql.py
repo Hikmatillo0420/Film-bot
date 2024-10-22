@@ -310,6 +310,10 @@ class Database:
         DELETE FROM admins WHERE user_id = %s"""
         return self.execute(sql, parameters=(user_id,), commit=True)
 
+    def delete_serial_by_name(self, serial_name: str):
+        sql = "DELETE FROM serials WHERE serial_name = %s"
+        self.execute(sql, parameters=(serial_name,), commit=True)
+
 
 def logger(statement):
     print(f"""

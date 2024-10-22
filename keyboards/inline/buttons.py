@@ -12,6 +12,22 @@ async def yes_no_button():
     )
     return button
 
+async def yes_no_button_episode():
+    button = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="Ha", callback_data="yes_episode"),
+             InlineKeyboardButton(text="Yo'q", callback_data="no_episode")]]
+
+    )
+    return button
+async def yes_no_button_confirmation():
+    buttons = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="Ha", callback_data="confirm_yes"),
+             InlineKeyboardButton(text="Yo'q", callback_data="confirm_no")]
+        ]
+    )
+    return buttons
 
 async def yes_no_button_2():
     button = InlineKeyboardMarkup(
@@ -67,9 +83,11 @@ async def delete_admin_button():
     return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
 
 
+
+
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-def generate_episode_buttons(episodes, page=1, per_page=100):
+def generate_episode_buttons(episodes, serial_id, page=1, per_page=5):
     buttons = []
     start_index = (page - 1) * per_page
     end_index = start_index + per_page
@@ -79,12 +97,12 @@ def generate_episode_buttons(episodes, page=1, per_page=100):
     for ep in episodes[start_index:end_index]:
         button = InlineKeyboardButton(
             text=f"{ep['episode_number']}",
-            callback_data=f"view_episode_{ep['episode_number']}"
+            callback_data=f"view_episode_{serial_id}_{ep['episode_number']}"
         )
         row.append(button)
 
-        # Har ikki qismdan keyin qatorni to'ldiramiz
-        if len(row) == 100:
+        # Har beshta qismdan keyin qatorni to'ldiramiz
+        if len(row) == 5:
             buttons.append(row)
             row = []
 
@@ -95,12 +113,11 @@ def generate_episode_buttons(episodes, page=1, per_page=100):
     # Sahifalash uchun "Oldingi" va "Keyingi" tugmalari
     pagination_row = []
     if page > 1:
-        pagination_row.append(InlineKeyboardButton(text="⬅️ Oldingi", callback_data=f"pagination_{page - 1}"))
+        pagination_row.append(InlineKeyboardButton(text="⬅️ Oldingi", callback_data=f"pagination_{serial_id}_{page - 1}"))
     if end_index < len(episodes):
-        pagination_row.append(InlineKeyboardButton(text="Keyingi ➡️", callback_data=f"pagination_{page + 1}"))
+        pagination_row.append(InlineKeyboardButton(text="Keyingi ➡️", callback_data=f"pagination_{serial_id}_{page + 1}"))
 
     if pagination_row:
         buttons.append(pagination_row)
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
-

@@ -1,5 +1,7 @@
+from pydantic.v1.validators import anystr_strip_whitespace
+
 from filters import IsBotAdmin
-from keyboards.inline.buttons import generate_episode_buttons
+from keyboards.inline.buttons import generate_episode_buttons, yes_no_button_episode, yes_no_button_confirmation
 from loader import dp, db
 from aiogram import types, F
 from aiogram.fsm.context import FSMContext
@@ -48,6 +50,7 @@ async def serial_banner_add(message: types.Message, state: FSMContext):
 
 
 # Serial qismi uchun video yuklash
+# Serial qismi uchun video yuklash
 @dp.message(FilmAddStates.waiting_for_episode_video, F.video)
 async def episode_video_add(message: types.Message, state: FSMContext):
     try:
@@ -58,7 +61,10 @@ async def episode_video_add(message: types.Message, state: FSMContext):
         episode_number = len(episodes) + 1
         episodes.append({'episode_number': episode_number, 'video_id': video_id})  # video_id ni qo'shamiz
         await state.update_data({'episodes': episodes})
-        await message.answer(f"Serial qismi {episode_number} qo'shildi!\nYana qism qo'shishni xohlaysizmi? (Ha/Yo'q)")
+        await message.answer(
+            f"Serial qismi {episode_number} qo'shildi!\nYana qism qo'shishni xohlaysizmi? (Ha/Yo'q)",
+            reply_markup=await yes_no_button_episode()
+        )
         await state.set_state(FilmAddStates.waiting_for_more_episodes)
     except Exception as e:
         await message.answer("Video qo'shishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.")
@@ -66,38 +72,37 @@ async def episode_video_add(message: types.Message, state: FSMContext):
         logger(str(e))
 
 
-# Ko'proq qismlar qo'shishni so'rash
-@dp.message(FilmAddStates.waiting_for_more_episodes, F.text)
-async def more_episodes_decision(message: types.Message, state: FSMContext):
-    answer = message.text.lower()
-    if answer in ['ha', 'ha!', 'yes', 'y']:
-        await message.answer("Serial qismi uchun videoni jo'nating!")
+# Callback orqali tanlovni boshqarish (Ha/Yo'q)
+@dp.callback_query(F.data.in_(['yes_episode', 'no_episode']))
+async def more_episodes_decision_callback(callback_query: types.CallbackQuery, state: FSMContext):
+    if callback_query.data == 'yes_episode':
+        await callback_query.message.answer("Serial qismi uchun videoni jo'nating!")
         await state.set_state(FilmAddStates.waiting_for_episode_video)
-    elif answer in ['yo\'q', 'no', 'n']:
+    elif callback_query.data == 'no_episode':
         data = await state.get_data()
         serial_title = data.get('serial_title')
         serial_banner = data.get('serial_banner')
         episodes = data.get('episodes', [])
 
-        # Serial va qismlar haqida tasdiqlash uchun ma'lumot chiqarish
-        serial_title = data.get('serial_title')  # Serial nomini olamiz
-
-        await message.answer_photo(serial_banner, caption=serial_title, reply_markup=generate_episode_buttons(episodes))
-
+        # Epizodlarni matn sifatida ko'rsatish yoki rasm bilan
         if episodes:
             episodes_list = "\n".join([f"Qism {ep['episode_number']}" for ep in episodes])
-            # await message.answer(f"Qismlar:\n{episodes_list}")
         else:
-            await message.answer("Qismlar yo'q.")
-        await message.answer("Ma'lumotlarni saqlash uchun 'Ha', saqlamaslik uchun 'Yo'q' deb javob bering.")
+            await callback_query.message.answer("Qismlar yo'q.")
+
+        await callback_query.message.answer(
+            "Ma'lumotlarni saqlash uchun quyidagi tugmalardan birini tanlang:",
+            reply_markup=await yes_no_button_confirmation())
         await state.set_state(FilmAddStates.waiting_for_confirmation)
+
+    await callback_query.answer()
 
 
 # Serial va qismlarni tasdiqlash va bazaga saqlash
-@dp.message(FilmAddStates.waiting_for_confirmation, F.text)
-async def confirmation_handler(message: types.Message, state: FSMContext):
-    answer = message.text.lower()
-    if answer in ['ha', 'ha!', 'yes', 'y']:
+@dp.callback_query(FilmAddStates.waiting_for_confirmation, F.data.in_(['confirm_yes', 'confirm_no']))
+async def confirmation_callback_handler(callback_query: types.CallbackQuery, state: FSMContext):
+    answer = callback_query.data
+    if answer == 'confirm_yes':
         data = await state.get_data()
         serial_name = data.get('serial_name')
         serial_banner = data.get('serial_banner')
@@ -109,64 +114,58 @@ async def confirmation_handler(message: types.Message, state: FSMContext):
             db.add_serial(serial_name, serial_title, serial_banner)
             serial_id = db.get_serial_id(serial_name)
 
-            # Bu yerda serial_id ni state ga saqlab qo'yamiz
-            await state.update_data(serial_id=serial_id)
-
+            # Epizodlarni bazaga qo'shish
             for ep in episodes:
                 db.add_episode(serial_id, ep['episode_number'], ep['video_id'])
 
-            await message.answer_photo(serial_banner, caption="Serial banneri",
-                                       reply_markup=generate_episode_buttons(episodes))
+            # Banner yoki paginationni yubormasdan, faqat tasdiqlovchi xabarni chiqaramiz
+            await callback_query.message.answer("Serial va qismlar muvaffaqiyatli saqlandi!")
             await state.clear()
         except Exception as e:
-            await message.answer("Serial va qismlarni saqlashda xatolik yuz berdi.")
+            await callback_query.message.answer("Serial va qismlarni saqlashda xatolik yuz berdi.")
             await state.clear()
             logger(str(e))
-    elif answer in ['yo\'q', 'no', 'n']:
-        await message.answer("Serial va qismlar qo'shilmadi. Jarayon to'xtatildi.")
+    elif answer == 'confirm_no':
+        await callback_query.message.answer("Serial qo'shilmadi !")
         await state.clear()
+
+    await callback_query.answer()
+
 
 
 
 @dp.callback_query(F.data.startswith("view_episode_"))
-async def view_episode(callback_query: types.CallbackQuery, state: FSMContext):
-    episode_number = int(callback_query.data.split("_")[2])
+async def view_episode(callback_query: types.CallbackQuery):
+    data_parts = callback_query.data.split("_")
+    serial_id = int(data_parts[2])  # Because 'view_episode_{serial_id}_{episode_number}'
+    episode_number = int(data_parts[3])
     await callback_query.answer()
 
-    # State'dan serial_id'ni olish
-    data = await state.get_data()
-    serial_id = data.get('serial_id')
+    # Bazadan epizodlarni olish
+    episodes = db.get_episodes_by_serial_id(serial_id)
 
-    if serial_id:
-        # Bazadan epizodlarni olish
-        episodes = db.get_episodes_by_serial_id(serial_id)
+    # Epizodni topish va video yuborish
+    for ep in episodes:
+        if ep['episode_number'] == episode_number:
+            await callback_query.message.answer_video(video=ep['video_id'],
+                                                      caption=f"{episode_number}-qism")
+            return
 
-        # Epizodni topish va video yuborish
-        for ep in episodes:
-            if ep['episode_number'] == episode_number:
-                await callback_query.message.answer_video(video=ep['video_id'],
-                                                          caption=f"{episode_number}-qism")
-                return
-
-        # Agar epizod topilmasa
-        await callback_query.message.answer("Epizod topilmadi.")
-    else:
-        await callback_query.message.answer("Serial ID aniqlanmadi, iltimos qayta urinib ko'ring.")
-
+    # Agar epizod topilmasa
+    await callback_query.message.answer("Epizod topilmadi.")
 
 
 @dp.callback_query(F.data.startswith("pagination_"))
-async def pagination_callback(callback_query: types.CallbackQuery, state: FSMContext):
-    await callback_query.answer(cash_time=60)
-    page = int(callback_query.data.split("_")[1])
-
-    # FSMContext orqali epizod ma'lumotlarini olish
-    data = await state.get_data()
-    episodes = data.get('episodes', [])
-
+async def pagination_callback(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    data_parts = callback_query.data.split("_")
+    serial_id = int(data_parts[1])
+    page = int(data_parts[2])
+    # Bazadan epizodlarni olish
+    episodes = db.get_episodes_by_serial_id(serial_id)
     if not episodes:
         await callback_query.message.answer("Hozircha epizodlar mavjud emas.")
         return
 
     # Sahifalangan qismlar ro'yxatini qayta chiqarish
-    await callback_query.message.edit_reply_markup(reply_markup=generate_episode_buttons(episodes, page))
+    await callback_query.message.edit_reply_markup(reply_markup=generate_episode_buttons(episodes, serial_id, page))

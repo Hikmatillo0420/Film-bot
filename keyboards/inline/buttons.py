@@ -121,3 +121,17 @@ def generate_episode_buttons(episodes, serial_id, page=1, per_page=5):
         buttons.append(pagination_row)
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+async def add_episode_button():
+    seriallar = db.get_serial()
+    inline_keyboard = []
+
+    for serial in seriallar:
+        tugma = InlineKeyboardButton(
+            text=f"{serial['serial_name']}",
+            callback_data=f"add_episode_{serial['id']}"  # Callback uchun serial_id ishlatilmoqda
+        )
+        inline_keyboard.append([tugma])
+
+    return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)

@@ -122,7 +122,7 @@ class Database:
         CREATE TABLE IF NOT EXISTS serials (
             id INT AUTO_INCREMENT PRIMARY KEY,
             serial_name VARCHAR(255) NOT NULL,
-            serial_title VARCHAR(255),
+            serial_title VARCHAR(255) NOT NULL,
             serial_banner VARCHAR(255) NOT NULL
         ) CHARSET = utf8mb3;
         """
@@ -152,11 +152,23 @@ class Database:
         result = self.execute(sql, parameters=(serial_name,), fetchone=True)
         return result['id'] if result else None
 
+    def get_serial_by_id(self, serial_id: int):
+        sql = """
+            SELECT * FROM serials WHERE id = %s
+        """
+        return self.execute(sql, parameters=(serial_id,), fetchone=True)
+
     def add_episode(self, serial_id: int, episode_number: int, video_id: str):
         sql = """
             INSERT INTO episodes(serial_id, episode_number, video_id) VALUES (%s, %s, %s)
         """
         self.execute(sql, parameters=(serial_id, episode_number, video_id), commit=True)
+
+    def get_episodes_by_serial_id(self, serial_id: int):
+        sql = """
+            SELECT * FROM episodes WHERE serial_id = %s ORDER BY episode_number
+        """
+        return self.execute(sql, parameters=(serial_id,))
 
     def check_code_exists_serial(self, serial_name: str):
         query = "SELECT EXISTS(SELECT 1 FROM serials WHERE serial_name = %s)"
@@ -167,6 +179,10 @@ class Database:
         sql = "SELECT * FROM serials WHERE serial_name = %s"
         result = self.execute(sql, parameters=(serial_name,), fetchone=True)
         return result
+
+    def get_serial(self):
+        sql = "SELECT * FROM serials"
+        return self.execute(sql, fetchall=True)
 
     def get_episodes_by_serial_id(self, serial_id: int):
         sql = "SELECT * FROM episodes WHERE serial_id = %s ORDER BY episode_number"
@@ -212,7 +228,6 @@ class Database:
         channels = self.execute(sql, fetchall=True)
         return [channel['url'] for channel in channels]  # Faqat url'ni qaytaradi
 
-
     def add_senduser(self, mid: int, soni: int, boshlash_vaqt: str, joriy_vaqt: str, status: str, send: str, holat: str,
                      nosend: str, qayerga: str, admin: str):
         sql = """
@@ -228,7 +243,6 @@ class Database:
         INSERT INTO users(user_id, ban, sana, status) VALUES (%s, %s, %s, %s)
         """
         self.execute(sql, parameters=(user_id, ban, sana, status), commit=True)
-
 
     def select_all_users(self):
         sql = """
@@ -250,7 +264,6 @@ class Database:
 
     def count_users(self):
         return self.execute("SELECT COUNT(user_id) as total FROM users;", fetchone=True)
-
 
     def delete_all_users(self):
         sql = """
@@ -299,7 +312,6 @@ class Database:
         # Natija faqat bitta qiymatni qaytaradi ('EXISTS' natijasi), shuning uchun biz faqat birinchi qiymatni olamiz
         return list(result.values())[0]
 
-
     def delete_film_id(self, kod):
         sql = """
         DELETE FROM data WHERE kod = %s"""
@@ -322,6 +334,3 @@ Executing:
 {statement}
 _____________________________________________________
 """)
-
-
-

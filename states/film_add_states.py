@@ -23,4 +23,8 @@ class FilmAddStates(StatesGroup):
     waiting_for_confirmation = State()
     waiting_for_serial_title = State()
     waiting_for_serial_delete  = State()
+    waiting_for_episode_video2 = State()
+    waiting_for_more_episodes_existing_serial = State()
+    waiting_for_more_episodes_existing = State()
+    waiting_for_episode_video_existing = State()
 

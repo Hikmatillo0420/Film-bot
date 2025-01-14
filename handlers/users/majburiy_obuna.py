@@ -34,7 +34,7 @@ async def process_forwarded_message(message: Message, state: FSMContext):
             await state.update_data(channel_id=channel_id)
             await state.set_state(FilmAddStates.waiting_for_channel_link)
         else:
-            db.add_kanal(channel_id, channel_username)
+            db.add_kanal(channel_id,"https://t.me/" +channel_username  )
             await message.answer(f"Kanal qo'shildi!\nKanal ID: {channel_id}\nUsername: @{channel_username}")
     else:
         await message.answer("Iltimos, kanaldan xabar forward qiling.")

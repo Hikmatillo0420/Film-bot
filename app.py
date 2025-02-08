@@ -13,7 +13,7 @@ import sys
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
     try:
-        await bot.set_my_commands(commands=commands, scope=BotCommandScopeAllPrivateChats(type='all_private_chats'))
+        # await bot.set_my_commands(commands=commands, scope=BotCommandScopeAllPrivateChats(type='all_private_chats'))
         dp.startup.register(start)
         dp.shutdown.register(shutdown)
         dp.update.outer_middleware(UserCheckMiddleware())

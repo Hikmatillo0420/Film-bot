@@ -22,7 +22,7 @@ async def return_film_or_serial(message: types.Message, state: FSMContext):
             text = (
                 f"⌨️ KOD: #{row['kod']}\n"
                 f"📑 Name: {name_film['file_name']}\n\n"
-                f" 📍Bizning bot: @kmfilmlar_bot"
+                f" 📍Bizning bot: @MeshpolvonFilm_bot"
             )
             await message.answer_video(row['file_id'], caption=text, parse_mode="HTML")
         else:
@@ -32,6 +32,7 @@ async def return_film_or_serial(message: types.Message, state: FSMContext):
     else:
         serial_name = user_input
         serial = db.get_serial_by_name(serial_name)
+        print(f"Searching for serial: {serial_name}, Found: {serial}")  # Debugging uchun
 
         if serial:
             episodes = db.get_episodes_by_serial_id(serial['id'])  # Serialga tegishli qismlar
